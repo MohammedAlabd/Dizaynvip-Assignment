@@ -16,9 +16,13 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configure CORS to allow requests from frontend
-# Allow all origins for development (in production, restrict this)
+# Get allowed origins from environment variable or use defaults
+allowed_origins = os.getenv('ALLOWED_ORIGINS', '*')
+if allowed_origins != '*':
+    allowed_origins = allowed_origins.split(',')
+
 CORS(app, 
-     resources={r"/api/*": {"origins": "*"}},
+     resources={r"/api/*": {"origins": allowed_origins}},
      allow_headers=["Content-Type", "Authorization"],
      methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"])
 
@@ -141,6 +145,11 @@ if __name__ == '__main__':
         print("WARNING: OPENAI_API_KEY not found in environment variables!")
         print("Please create a .env file with your OpenAI API key.")
     
-    # Use port 5001 instead of 5001 (5001 is often used by macOS AirPlay)
-    app.run(debug=True, port=5001, host='127.0.0.1')
+    # Get port from environment variable (for deployment) or use 5001 for local dev
+    port = int(os.getenv('PORT', 5001))
+    # Use 0.0.0.0 for production deployment, 127.0.0.1 for local dev
+    host = os.getenv('HOST', '127.0.0.1')
+    debug = os.getenv('FLASK_ENV') != 'production'
+    
+    app.run(debug=debug, port=port, host=host)
 
